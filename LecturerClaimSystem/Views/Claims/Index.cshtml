@@ -1,0 +1,57 @@
+﻿@model IEnumerable<LecturerClaimSystem.Models.Claim>
+@{
+    ViewBag.Title = "My Claims";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-center mb-5">
+    <h2 class="display-5 fw-bold">Welcome, Lecturer</h2>
+    <p class="lead">Submit and track your claims with ease</p>
+    <a asp-action="Add" class="btn btn-lg btn-success shadow">Submit a new claim</a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4>Your Claims</h4>
+    </div>
+    <div class="card-body">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info mb-0">No claims found yet. Click "Submit a new claim" to get started.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Lecturer</th>
+                            <th>Hours</th>
+                            <th>Rate</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var claim in Model)
+                        {
+                            <tr>
+                                <td>@claim.LecturerName</td>
+                                <td>@claim.HoursWorked</td>
+                                <td>@claim.HourlyRate</td>
+                                <td><span class="badge bg-secondary">@claim.Status</span></td>
+                                <td>@claim.SubmittedDate.ToShortDateString()</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@claim.Id" class="btn btn-sm btn-outline-primary">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
