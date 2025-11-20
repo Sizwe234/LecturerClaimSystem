@@ -1,50 +1,100 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>@ViewBag.Title - Lecturer Claim System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
-</head>
-<body class="bg-light">
+﻿@model LecturerClaimSystem.Models.Claim
+@{
+    ViewBag.Title = "Submit claim";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-    <header class="bg-dark text-white py-3">
-        <div class="container d-flex flex-wrap align-items-center justify-content-between">
-            <h1 class="h4 m-0">Lecturer Claim System</h1>
-            <nav class="d-flex gap-2">
-                <a class="btn btn-outline-light" asp-controller="Lecturer" asp-action="Dashboard">Lecturer dashboard</a>
-                <a class="btn btn-outline-warning" asp-controller="Lecturer" asp-action="Submit">Submit claim</a>
-                <a class="btn btn-outline-info" asp-controller="Coordinator" asp-action="Index">Coordinator view</a>
-                <a class="btn btn-outline-success" asp-controller="Manager" asp-action="Index">Manager view</a>
-            </nav>
+<h2 class="mb-3 text-primary">Submit a claim</h2>
+<p class="text-muted">Your name and hourly rate are set by HR. Enter hours and upload documents.</p>
+
+<form asp-action="Submit" method="post" enctype="multipart/form-data" class="card shadow-sm">
+    @Html.AntiForgeryToken()
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Lecturer name</label>
+                <input class="form-control" value="@Model.LecturerName" readonly />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Lecturer email</label>
+                <input class="form-control" value="@Model.LecturerEmail" readonly />
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="HoursWorked" class="form-label fw-bold">Hours worked</label>
+                <input asp-for="HoursWorked" class="form-control" id="hours" />
+                <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                <div class="form-text">Maximum 180 hours per month.</div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Hourly rate</label>
+                <input class="form-control bg-light" id="rate" value="@Model.HourlyRate" readonly />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Auto calculation</label>
+                <input class="form-control bg-light" id="total" value="@(Model.HoursWorked* Model.HourlyRate)" readonly />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Notes" class="form-label fw-bold">Additional notes</label>
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-bold">Upload supporting document</label>
+                <input type="file" name="upload" class="form-control" accept=".pdf,.docx,.xlsx" />
+                <div class="form-text">Max 10 MB. Types: .pdf, .docx, .xlsx.</div>
+            </div>
         </div>
-    </header>
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Submit claim</button>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Back to dashboard</a>
+    </div>
+</form>
 
-    <main class="container my-4">
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">@TempData["Success"]</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+                const hours = document.getElementById('hours');
+                const rate = document.getElementById('rate');
+                const total = document.getElementById('total');
+                function recalc() {
+                    const h = parseFloat(hours.value || '0');
+                    const r = parseFloat(rate.value || '0');
+                    total.value = (h * r).toFixed(2);
+                }
+                hours.addEventListener('input', recalc);
+                recalc();<!-- Add inside header nav in _Layout.cshtml -->
+        @{
+                var role = Context.Session.GetString("UserRole") ?? "";
+                var name = Context.Session.GetString("UserName") ?? "";
         }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Error"]</div>
-        }
-
-        @RenderBody()
-    </main>
-
-    <footer class="bg-white border-top py-3">
-        <div class="container text-muted small">
-            &copy; @DateTime.Now.Year Lecturer Claim System
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-
-    @RenderSection("Scripts", required: false)
-</body>
-</html>
+        <nav class="d-flex gap-2">
+            <a class="btn btn-outline-light" asp-controller="Lecturer" asp-action="Dashboard">Lecturer dashboard</a>
+            <a class="btn btn-outline-warning" asp-controller="Lecturer" asp-action="Submit">Submit claim</a>
+            <a class="btn btn-outline-info" asp-controller="Coordinator" asp-action="Index">Coordinator view</a>
+            <a class="btn btn-outline-success" asp-controller="Manager" asp-action="Index">Manager view</a>
+            <a class="btn btn-outline-secondary" asp-controller="Admin" asp-action="Index">Admin/HR dashboard</a>
+            @if (role == "HR")
+            {
+                    <a class="btn btn-outline-primary" asp-controller="Hr" asp-action="Index">HR: Users</a>
+            }
+            @if (string.IsNullOrWhiteSpace(role))
+            {
+                    <a class="btn btn-light" asp-controller="Auth" asp-action="Login">Login</a>
+            }
+            else
+            {
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-light">Logout (@name)</button>
+                    </form>
+            }
+        </nav>
+    </script>
+}

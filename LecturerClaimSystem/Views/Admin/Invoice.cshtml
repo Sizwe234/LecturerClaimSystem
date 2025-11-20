@@ -1,0 +1,18 @@
+﻿<!-- Views/Admin/Invoice.cshtml -->
+@model LecturerClaimSystem.Models.Claim
+@{
+    ViewBag.Title = "Invoice";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Invoice</h2>
+<p><strong>Lecturer:</strong> @Model.LecturerName</p>
+<p><strong>Email:</strong> @Model.LecturerEmail</p>
+<p><strong>Hours:</strong> @Model.HoursWorked</p>
+<p><strong>Rate:</strong> @Model.HourlyRate</p>
+<p><strong>Total:</strong> @(Model.HoursWorked* Model.HourlyRate)</p>
+<p><strong>Status:</strong> @Model.Status</p>
+<p><strong>Submitted:</strong> @Model.SubmittedDate</p>
+
+<button class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+<a asp-action="Index" class="btn btn-secondary">Back</a>

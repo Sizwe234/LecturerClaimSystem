@@ -5,51 +5,49 @@
 }
 
 <h2 class="mb-3 text-primary">Submit a claim</h2>
-<p class="text-muted">Enter hours, rate, optional notes, and upload supporting document(s).</p>
+<p class="text-muted">Your name and hourly rate are set by HR. Enter hours and upload documents.</p>
 
 <form asp-action="Submit" method="post" enctype="multipart/form-data" class="card shadow-sm">
+    @Html.AntiForgeryToken()
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-6">
-                <label asp-for="LecturerName" class="form-label fw-bold">Lecturer name</label>
-                <input asp-for="LecturerName" class="form-control" />
-                <span asp-validation-for="LecturerName" class="text-danger"></span>
+                <label class="form-label fw-bold">Lecturer name</label>
+                <input class="form-control" value="@Model.LecturerName" readonly />
             </div>
 
             <div class="col-md-6">
-                <label asp-for="LecturerEmail" class="form-label fw-bold">Lecturer email</label>
-                <input asp-for="LecturerEmail" class="form-control" />
-                <span asp-validation-for="LecturerEmail" class="text-danger"></span>
+                <label class="form-label fw-bold">Lecturer email</label>
+                <input class="form-control" value="@Model.LecturerEmail" readonly />
             </div>
 
             <div class="col-md-4">
                 <label asp-for="HoursWorked" class="form-label fw-bold">Hours worked</label>
-                <input asp-for="HoursWorked" class="form-control" />
+                <input asp-for="HoursWorked" class="form-control" id="hours" />
                 <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                <div class="form-text">Maximum 180 hours per month.</div>
             </div>
 
             <div class="col-md-4">
-                <label asp-for="HourlyRate" class="form-label fw-bold">Hourly rate</label>
-                <input asp-for="HourlyRate" class="form-control" />
-                <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                <label class="form-label fw-bold">Hourly rate</label>
+                <input class="form-control bg-light" id="rate" value="@Model.HourlyRate" readonly />
             </div>
 
             <div class="col-md-4">
                 <label class="form-label fw-bold">Auto calculation</label>
-                <input class="form-control bg-light" value="@(Model.HoursWorked* Model.HourlyRate)" readonly />
+                <input class="form-control bg-light" id="total" value="@(Model.HoursWorked* Model.HourlyRate)" readonly />
             </div>
 
             <div class="col-12">
                 <label asp-for="Notes" class="form-label fw-bold">Additional notes</label>
                 <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
 
             <div class="col-12">
                 <label class="form-label fw-bold">Upload supporting document</label>
-                <input type="file" name="upload" class="form-control" />
-                <div class="form-text">
-                    Max 10 MB. Allowed types: .pdf, .docx, .xlsx.
-                </div>
+                <input type="file" name="upload" class="form-control" accept=".pdf,.docx,.xlsx" />
+                <div class="form-text">Max 10 MB. Types: .pdf, .docx, .xlsx.</div>
             </div>
         </div>
     </div>
@@ -61,4 +59,16 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const hours = document.getElementById('hours');
+        const rate = document.getElementById('rate');
+        const total = document.getElementById('total');
+        function recalc() {
+            const h = parseFloat(hours.value || '0');
+            const r = parseFloat(rate.value || '0');
+            total.value = (h * r).toFixed(2);
+        }
+        hours.addEventListener('input', recalc);
+        recalc();
+    </script>
 }
