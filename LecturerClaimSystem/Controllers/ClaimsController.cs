@@ -2,85 +2,56 @@
 using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
 {
-    public class ClaimsController : Controller
-    {
-        private readonly FileStorageService _files;
+	public class ClaimsController : Controller
+	{
+		public IActionResult Index()
+		{
+			var claims = ClaimDataStore.GetAllClaims();
+			return View(claims);
+		}
 
-        public ClaimsController(FileStorageService files)
-        {
-            _files = files;
-        }
+		public IActionResult Details(int id)
+		{
+			var claim = ClaimDataStore.GetClaimById(id);
+			if (claim == null)
+			{
+				TempData["Error"] = "Claim not found.";
+				return RedirectToAction(nameof(Index));
+			}
+			return View(claim);
+		}
 
-        public IActionResult Index()
-        {
-            var claims = ClaimDataStore.GetAllClaims();
-            return View(claims);
-        }
+		[HttpGet]
+		public IActionResult DownloadDocument(int claimId, int documentId)
+		{
+			var claim = ClaimDataStore.GetClaimById(claimId);
+			if (claim == null) { TempData["Error"] = "Claim not found."; return RedirectToAction(nameof(Index)); }
 
-        public IActionResult Add() => View(new Claim());
+			var doc = claim.Documents.FirstOrDefault(d => d.Id == documentId);
+			if (doc == null) { TempData["Error"] = "Document not found."; return RedirectToAction(nameof(Details), new { id = claimId }); }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Add(Claim claim, IFormFile? upload)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(claim.LecturerName))
-                    ModelState.AddModelError(nameof(claim.LecturerName), "Lecturer name is required.");
-                if (string.IsNullOrWhiteSpace(claim.LecturerEmail))
-                    ModelState.AddModelError(nameof(claim.LecturerEmail), "Lecturer email is required.");
-                if (claim.HoursWorked <= 0)
-                    ModelState.AddModelError(nameof(claim.HoursWorked), "Hours worked must be greater than 0.");
-                if (claim.HourlyRate <= 0)
-                    ModelState.AddModelError(nameof(claim.HourlyRate), "Hourly rate must be greater than 0.");
+			var service = HttpContext.RequestServices.GetService(typeof(FileStorageService)) as FileStorageService;
+			if (service == null) { TempData["Error"] = "Storage service unavailable."; return RedirectToAction(nameof(Details), new { id = claimId }); }
 
-                if (!ModelState.IsValid)
-                    return View(claim);
+			var read = service.ReadClaimFile(doc.StoredPath);
+			if (!read.ok || read.bytes == null) { TempData["Error"] = read.error ?? "File read error."; return RedirectToAction(nameof(Details), new { id = claimId }); }
 
-                ClaimDataStore.AddClaim(claim);
+			var ext = Path.GetExtension(doc.FileName).ToLowerInvariant();
+			var contentType = ext switch
+			{
+				".pdf" => "application/pdf",
+				".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+				".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+				_ => "application/octet-stream"
+			};
 
-                if (upload != null && upload.Length > 0)
-                {
-                    var result = _files.SaveClaimFile(upload, claim.Id);
-                    if (!result.ok)
-                    {
-                        TempData["Error"] = result.error ?? "File upload failed.";
-                    }
-                    else
-                    {
-                        var added = ClaimDataStore.AddDocumentToClaim(claim.Id, result.doc!);
-                        if (!added)
-                            TempData["Error"] = "File saved but not linked to claim.";
-                        else
-                            TempData["Success"] = $"Claim submitted. File uploaded: {result.doc!.FileName}";
-                    }
-                }
-                else
-                {
-                    TempData["Success"] = "Claim submitted successfully.";
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Unexpected error: {ex.Message}";
-                return View(claim);
-            }
-        }
-
-        public IActionResult Details(int id)
-        {
-            var claim = ClaimDataStore.GetClaimById(id);
-            if (claim == null)
-            {
-                TempData["Error"] = "Claim not found.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(claim);
-        }
-    }
+			return File(read.bytes, contentType, doc.FileName);
+		}
+	}
 }

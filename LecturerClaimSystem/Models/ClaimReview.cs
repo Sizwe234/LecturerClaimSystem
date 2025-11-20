@@ -2,14 +2,18 @@
 
 namespace LecturerClaimSystem.Models
 {
-    public class ClaimReview
-    {
-        public int Id { get; set; }
-        public int ClaimId { get; set; }
-        public string ReviewerName { get; set; } = "";
-        public string ReviewerRole { get; set; } = "";
-        public DateTime ReviewDate { get; set; }
-        public ClaimStatus Decision { get; set; }
-        public string Comments { get; set; } = "";
-    }
+	public class ClaimReview
+	{
+		public int Id { get; set; }
+		public int ClaimId { get; set; }
+
+		public DateTime ReviewDate { get; set; } = DateTime.Now;
+		public string ReviewerName { get; set; } = "";
+		public string ReviewerRole { get; set; } = "";
+
+		// Either keep as string or change to ClaimStatus
+		public ClaimStatus Decision { get; set; }
+
+		public string Comments { get; set; } = "";
+	}
 }

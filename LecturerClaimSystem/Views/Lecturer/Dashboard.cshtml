@@ -1,0 +1,47 @@
+﻿@model IEnumerable<LecturerClaimSystem.Models.Claim>
+@{
+    ViewBag.Title = "Lecturer Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-center mb-4">
+    <h2 class="fw-bold">My Claims</h2>
+    <a asp-controller="Lecturer" asp-action="Submit" class="btn btn-success">Submit a new claim</a>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">No claims found yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Lecturer</th>
+                    <th>Hours</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var claim in Model)
+                {
+                    <tr>
+                        <td>@claim.LecturerName</td>
+                        <td>@claim.HoursWorked</td>
+                        <td>@claim.HourlyRate</td>
+                        <td><span class="badge bg-secondary">@claim.Status</span></td>
+                        <td>@claim.SubmittedDate.ToShortDateString()</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@claim.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
