@@ -2,77 +2,32 @@
 @{
     ViewBag.Title = "Admin Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string currentFilter = (ViewBag.Filter ?? "all").ToString();
+    string q = (ViewBag.Query ?? "").ToString();
 }
 
-<div class="text-center mb-5">
-    <h2 class="display-5 fw-bold">Admin Dashboard</h2>
-    <p class="lead">Track, verify, and approve lecturer claims</p>
+<div class="text-center mb-4">
+    <h2 class="display-6 fw-bold">Admin / HR Dashboard</h2>
+    <p class="text-muted">Search, filter, review, and export claims.</p>
 </div>
 
-<div class="row text-center mb-4">
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Pending</h5>
-                <span class="badge bg-warning text-dark fs-4">@ViewBag.PendingCount</span>
-            </div>
-        </div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input type="text" name="q" class="form-control" placeholder="Search by lecturer name or email" value="@q" />
     </div>
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Verified</h5>
-                <span class="badge bg-info text-dark fs-4">@ViewBag.VerifiedCount</span>
-            </div>
-        </div>
+    <div class="col-md-6 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+        <a asp-action="ExportCsv" asp-route-filter="@currentFilter" asp-route-q="@q" class="btn btn-success">Export CSV</a>
     </div>
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Approved</h5>
-                <span class="badge bg-success fs-4">@ViewBag.ApprovedCount</span>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Declined</h5>
-                <span class="badge bg-danger fs-4">@ViewBag.DeclinedCount</span>
-            </div>
-        </div>
-    </div>
-</div>
+</form>
 
-<div class="card shadow">
-    <div class="card-header bg-dark text-white">
-        <h4>All Claims</h4>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Lecturer</th>
-                        <th>Hours</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var claim in Model)
-                    {
-                        <tr>
-                            <td>@claim.LecturerName</td>
-                            <td>@claim.HoursWorked</td>
-                            <td><span class="badge bg-secondary">@claim.Status</span></td>
-                            <td>@claim.SubmittedDate.ToShortDateString()</td>
-                            <td><a asp-action="Review" asp-route-id="@claim.Id" class="btn btn-sm btn-outline-primary">Review</a></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="mb-3">
+    <div class="btn-group">
+        <a asp-action="Index" asp-route-filter="all" class="btn btn-outline-dark @(currentFilter == "all" ? "active" : "")">All</a>
+        <a asp-action="Index" asp-route-filter="pending" class="btn btn-outline-warning @(currentFilter == "pending" ? "active" : "")">Pending (@ViewBag.PendingCount)</a>
+        <a asp-action="Index" asp-route-filter="verified" class="btn btn-outline-info @(currentFilter == "verified" ? "active" : "")">Verified (@ViewBag.VerifiedCount)</a>
+        <a asp-action="Index" asp-route-filter="approved" class="btn btn-outline-success @(currentFilter == "approved" ? "active" : "")">Approved (@ViewBag.ApprovedCount)</a>
+        <a asp-action="Index" asp-route-filter="declined" class="btn btn-outline-danger @(currentFilter == "declined" ? "active" : "")">Declined (@ViewBag.DeclinedCount)</a>
     </div>
 </div>
