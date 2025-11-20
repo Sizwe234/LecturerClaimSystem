@@ -1,4 +1,6 @@
-﻿using LecturerClaimSystem.Data;
+﻿
+using LecturerClaimSystem.Data;
+using LecturerClaimSystem.Helpers;
 using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
 using Microsoft.AspNetCore.Http;
@@ -11,31 +13,42 @@ namespace LecturerClaimSystem.Controllers
 	public class LecturerController : Controller
 	{
 		private readonly FileStorageService _files;
+		private readonly AppDbContext _db;
 
-		public LecturerController(FileStorageService files)
+		public LecturerController(FileStorageService files, AppDbContext db)
 		{
 			_files = files;
+			_db = db;
+		}
+
+		private AppUser? CurrentLecturer()
+		{
+			var role = HttpContext.Session.GetString("UserRole");
+			var email = HttpContext.Session.GetString("UserEmail");
+			if (string.IsNullOrWhiteSpace(email) || role != UserRole.Lecturer.ToString()) return null;
+			return _db.Users.FirstOrDefault(u => u.Email.ToLower() == email.ToLower() && u.Role == UserRole.Lecturer);
 		}
 
 		[HttpGet]
 		public IActionResult Dashboard(string? email)
 		{
-			var claims = ClaimDataStore.GetAllClaims();
+			if (!HttpContext.Session.IsLoggedIn())
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Dashboard", "Lecturer") });
 
+			var claims = ClaimDataStore.GetAllClaims();
 			if (!string.IsNullOrWhiteSpace(email))
 			{
-				claims = claims
-					.Where(c => !string.IsNullOrWhiteSpace(c.LecturerEmail) &&
-								c.LecturerEmail.Trim().ToLower() == email.Trim().ToLower())
-					.ToList();
+				claims = claims.Where(c => c.LecturerEmail?.ToLower() == email.Trim().ToLower()).ToList();
 			}
-
 			return View(claims);
 		}
 
 		[HttpGet]
 		public IActionResult Details(int id)
 		{
+			if (!HttpContext.Session.IsLoggedIn())
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Details", "Lecturer", new { id }) });
+
 			var claim = ClaimDataStore.GetClaimById(id);
 			if (claim == null)
 			{
@@ -48,13 +61,38 @@ namespace LecturerClaimSystem.Controllers
 		[HttpGet]
 		public IActionResult Submit()
 		{
-			return View(new Claim());
+			var lecturer = CurrentLecturer();
+			if (lecturer == null)
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Submit", "Lecturer") });
+
+			// Pre-fill with lecturer details; HourlyRate pulled from HR data
+			var model = new Claim
+			{
+				LecturerName = lecturer.FullName,
+				LecturerEmail = lecturer.Email,
+				HourlyRate = lecturer.HourlyRate
+			};
+			return View(model);
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public IActionResult Submit(Claim model, IFormFile? upload)
 		{
+			var lecturer = CurrentLecturer();
+			if (lecturer == null)
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Submit", "Lecturer") });
+
+			// Force trusted fields from HR data
+			model.LecturerName = lecturer.FullName;
+			model.LecturerEmail = lecturer.Email;
+			model.HourlyRate = lecturer.HourlyRate;
+
+			if (model.HoursWorked > 180)
+			{
+				ModelState.AddModelError(nameof(model.HoursWorked), "Hours cannot exceed 180 in a month.");
+			}
+
 			if (!ModelState.IsValid)
 			{
 				TempData["Error"] = "Please correct the form errors.";
@@ -72,7 +110,6 @@ namespace LecturerClaimSystem.Controllers
 				}
 
 				var savedPath = _files.SaveClaimFile(model.Id, upload);
-
 				var doc = new ClaimDocument
 				{
 					FileName = upload.FileName,
@@ -80,7 +117,6 @@ namespace LecturerClaimSystem.Controllers
 					StoredPath = savedPath,
 					ClaimId = model.Id
 				};
-
 				ClaimDataStore.AddDocumentToClaim(model.Id, doc);
 				TempData["Success"] = "Claim submitted and document uploaded.";
 			}
@@ -89,12 +125,16 @@ namespace LecturerClaimSystem.Controllers
 				TempData["Success"] = "Claim submitted.";
 			}
 
-			return RedirectToAction(nameof(Dashboard));
+			return RedirectToAction(nameof(Dashboard), new { email = lecturer.Email });
 		}
 
 		[HttpGet]
 		public IActionResult Upload(int id)
 		{
+			var lecturer = CurrentLecturer();
+			if (lecturer == null)
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Upload", "Lecturer", new { id }) });
+
 			var claim = ClaimDataStore.GetClaimById(id);
 			if (claim == null)
 			{
@@ -108,6 +148,10 @@ namespace LecturerClaimSystem.Controllers
 		[ValidateAntiForgeryToken]
 		public IActionResult Upload(int id, IFormFile? upload)
 		{
+			var lecturer = CurrentLecturer();
+			if (lecturer == null)
+				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Upload", "Lecturer", new { id }) });
+
 			var claim = ClaimDataStore.GetClaimById(id);
 			if (claim == null)
 			{
@@ -128,7 +172,6 @@ namespace LecturerClaimSystem.Controllers
 			}
 
 			var savedPath = _files.SaveClaimFile(id, upload);
-
 			var doc = new ClaimDocument
 			{
 				FileName = upload.FileName,
@@ -136,7 +179,6 @@ namespace LecturerClaimSystem.Controllers
 				StoredPath = savedPath,
 				ClaimId = id
 			};
-
 			ClaimDataStore.AddDocumentToClaim(id, doc);
 			TempData["Success"] = "Document uploaded.";
 			return RedirectToAction(nameof(Details), new { id });
