@@ -19,11 +19,17 @@ namespace LecturerClaimSystem.Models
 
 		public void Add(Claim claim)
 		{
-		
 			if (claim.Id == 0)
 			{
 				claim.Id = _claims.Count + 1;
 			}
+
+
+			if (claim.Documents == null)
+			{
+				claim.Documents = new List<ClaimDocument>();
+			}
+
 			_claims.Add(claim);
 		}
 

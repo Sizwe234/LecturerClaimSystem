@@ -11,7 +11,7 @@ namespace LecturerClaimSystem.Models
 		public string ReviewerName { get; set; } = "";
 		public string ReviewerRole { get; set; } = "";
 
-		// Either keep as string or change to ClaimStatus
+
 		public ClaimStatus Decision { get; set; }
 
 		public string Comments { get; set; } = "";

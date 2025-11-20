@@ -3,7 +3,7 @@ using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using System.IO;
 using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
@@ -17,76 +17,23 @@ namespace LecturerClaimSystem.Controllers
 			_files = files;
 		}
 
+		[HttpGet]
 		public IActionResult Dashboard(string? email)
 		{
-			var claims = string.IsNullOrWhiteSpace(email)
-				? ClaimDataStore.GetAllClaims()
-				: ClaimDataStore.GetAllClaims().Where(c => c.LecturerEmail == email).ToList();
+			var claims = ClaimDataStore.GetAllClaims();
+
+			if (!string.IsNullOrWhiteSpace(email))
+			{
+				claims = claims
+					.Where(c => !string.IsNullOrWhiteSpace(c.LecturerEmail) &&
+								c.LecturerEmail.Trim().ToLower() == email.Trim().ToLower())
+					.ToList();
+			}
 
 			return View(claims);
 		}
 
-		public IActionResult Submit()
-		{
-			return View(new Claim());
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public IActionResult Submit(Claim claim, IFormFile? upload)
-		{
-			try
-			{
-				if (string.IsNullOrWhiteSpace(claim.LecturerName))
-					ModelState.AddModelError(nameof(claim.LecturerName), "Lecturer name is required.");
-				if (string.IsNullOrWhiteSpace(claim.LecturerEmail))
-					ModelState.AddModelError(nameof(claim.LecturerEmail), "Lecturer email is required.");
-				if (claim.HoursWorked <= 0)
-					ModelState.AddModelError(nameof(claim.HoursWorked), "Hours worked must be greater than 0.");
-				if (claim.HourlyRate <= 0)
-					ModelState.AddModelError(nameof(claim.HourlyRate), "Hourly rate must be greater than 0.");
-
-				if (!ModelState.IsValid)
-					return View(claim);
-
-				if (claim.HoursWorked > 10000)
-				{
-					ModelState.AddModelError(nameof(claim.HoursWorked), "Hours value is not valid.");
-					return View(claim);
-				}
-
-				ClaimDataStore.AddClaim(claim);
-
-				if (upload != null && upload.Length > 0)
-				{
-					var result = _files.SaveClaimFile(upload, claim.Id);
-					if (!result.ok)
-					{
-						TempData["Error"] = result.error ?? "File upload failed.";
-					}
-					else
-					{
-						var added = ClaimDataStore.AddDocumentToClaim(claim.Id, result.doc!);
-						if (!added)
-							TempData["Error"] = "File saved but not linked to claim.";
-						else
-							TempData["Success"] = $"Claim submitted. File uploaded: {result.doc!.FileName}";
-					}
-				}
-				else
-				{
-					TempData["Success"] = "Claim submitted successfully.";
-				}
-
-				return RedirectToAction(nameof(Dashboard), new { email = claim.LecturerEmail });
-			}
-			catch (Exception ex)
-			{
-				TempData["Error"] = $"Unexpected error: {ex.Message}";
-				return View(claim);
-			}
-		}
-
+		[HttpGet]
 		public IActionResult Details(int id)
 		{
 			var claim = ClaimDataStore.GetClaimById(id);
@@ -98,6 +45,54 @@ namespace LecturerClaimSystem.Controllers
 			return View(claim);
 		}
 
+		[HttpGet]
+		public IActionResult Submit()
+		{
+			return View(new Claim());
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult Submit(Claim model, IFormFile? upload)
+		{
+			if (!ModelState.IsValid)
+			{
+				TempData["Error"] = "Please correct the form errors.";
+				return View(model);
+			}
+
+			ClaimDataStore.AddClaim(model);
+
+			if (upload != null && upload.Length > 0)
+			{
+				if (!IsAllowedFile(upload))
+				{
+					TempData["Error"] = "Only .pdf, .docx, .xlsx up to 10 MB are allowed.";
+					return RedirectToAction(nameof(Details), new { id = model.Id });
+				}
+
+				var savedPath = _files.SaveClaimFile(model.Id, upload);
+
+				var doc = new ClaimDocument
+				{
+					FileName = upload.FileName,
+					FilePath = savedPath,
+					StoredPath = savedPath,
+					ClaimId = model.Id
+				};
+
+				ClaimDataStore.AddDocumentToClaim(model.Id, doc);
+				TempData["Success"] = "Claim submitted and document uploaded.";
+			}
+			else
+			{
+				TempData["Success"] = "Claim submitted.";
+			}
+
+			return RedirectToAction(nameof(Dashboard));
+		}
+
+		[HttpGet]
 		public IActionResult Upload(int id)
 		{
 			var claim = ClaimDataStore.GetClaimById(id);
@@ -122,25 +117,37 @@ namespace LecturerClaimSystem.Controllers
 
 			if (upload == null || upload.Length == 0)
 			{
-				TempData["Error"] = "No file selected.";
-				return RedirectToAction(nameof(Details), new { id });
+				TempData["Error"] = "Please select a file to upload.";
+				return RedirectToAction(nameof(Upload), new { id });
 			}
 
-			var result = _files.SaveClaimFile(upload, claim.Id);
-			if (!result.ok)
+			if (!IsAllowedFile(upload))
 			{
-				TempData["Error"] = result.error ?? "File upload failed.";
-			}
-			else
-			{
-				var added = ClaimDataStore.AddDocumentToClaim(claim.Id, result.doc!);
-				if (!added)
-					TempData["Error"] = "File saved but not linked to claim.";
-				else
-					TempData["Success"] = $"File uploaded: {result.doc!.FileName}";
+				TempData["Error"] = "Only .pdf, .docx, .xlsx up to 10 MB are allowed.";
+				return RedirectToAction(nameof(Upload), new { id });
 			}
 
+			var savedPath = _files.SaveClaimFile(id, upload);
+
+			var doc = new ClaimDocument
+			{
+				FileName = upload.FileName,
+				FilePath = savedPath,
+				StoredPath = savedPath,
+				ClaimId = id
+			};
+
+			ClaimDataStore.AddDocumentToClaim(id, doc);
+			TempData["Success"] = "Document uploaded.";
 			return RedirectToAction(nameof(Details), new { id });
+		}
+
+		private bool IsAllowedFile(IFormFile file)
+		{
+			var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+			var allowed = ext == ".pdf" || ext == ".docx" || ext == ".xlsx";
+			var underLimit = file.Length <= 10 * 1024 * 1024;
+			return allowed && underLimit;
 		}
 	}
 }
