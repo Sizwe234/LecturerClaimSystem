@@ -7,6 +7,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<IClaimRepository, InMemoryClaimRepository>();
 builder.Services.AddSingleton<FileStorageService>();
+builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 
