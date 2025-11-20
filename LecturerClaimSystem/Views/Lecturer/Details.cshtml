@@ -1,10 +1,10 @@
 ﻿@model LecturerClaimSystem.Models.Claim
 @{
-    ViewBag.Title = "Claim Details";
+    ViewBag.Title = "Claim details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Claim Details</h2>
+<h2>Claim details</h2>
 
 <div class="card mb-3">
     <div class="card-body">
@@ -16,40 +16,28 @@
         <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.Status</span></p>
 
         @{
-            int progress = 0;
-            string barClass = "bg-warning";
-
-            switch (Model.Status)
+            int progress = Model.Status switch
             {
-                case LecturerClaimSystem.Models.ClaimStatus.Pending:
-                    progress = 25;
-                    barClass = "bg-warning";
-                    break;
-                case LecturerClaimSystem.Models.ClaimStatus.Verified:
-                    progress = 50;
-                    barClass = "bg-info";
-                    break;
-                case LecturerClaimSystem.Models.ClaimStatus.Approved:
-                    progress = 100;
-                    barClass = "bg-success";
-                    break;
-                case LecturerClaimSystem.Models.ClaimStatus.Declined:
-                    progress = 100;
-                    barClass = "bg-danger";
-                    break;
-                default:
-                    progress = 0;
-                    barClass = "bg-warning";
-                    break;
-            }
+                LecturerClaimSystem.Models.ClaimStatus.Pending => 25,
+                LecturerClaimSystem.Models.ClaimStatus.Verified => 50,
+                LecturerClaimSystem.Models.ClaimStatus.Approved => 100,
+                LecturerClaimSystem.Models.ClaimStatus.Declined => 100,
+                _ => 0
+            };
+            string barClass = Model.Status switch
+            {
+                LecturerClaimSystem.Models.ClaimStatus.Pending => "bg-warning",
+                LecturerClaimSystem.Models.ClaimStatus.Verified => "bg-info",
+                LecturerClaimSystem.Models.ClaimStatus.Approved => "bg-success",
+                LecturerClaimSystem.Models.ClaimStatus.Declined => "bg-danger",
+                _ => "bg-secondary"
+            };
         }
 
         <div class="mb-2">
             <label class="form-label"><strong>Status progress</strong></label>
             <div class="progress">
-
-                <div class="progress-bar @barClass" role="progressbar" style="width:@(progress + "%");">
-                </div>
+                <div class="progress-bar @barClass" role="progressbar" style="width:@(progress + "%");"></div>
             </div>
         </div>
 
@@ -59,7 +47,7 @@
 </div>
 
 <h4>Supporting documents</h4>
-@if (Model.Documents?.Count > 0)
+@if (Model.Documents != null && Model.Documents.Count > 0)
 {
     <ul class="list-group mb-3">
         @foreach (var d in Model.Documents)
@@ -81,7 +69,7 @@ else
 }
 
 <h4>Review history</h4>
-@if (Model.Reviews?.Count > 0)
+@if (Model.Reviews != null && Model.Reviews.Count > 0)
 {
     <div class="table-responsive">
         <table class="table table-sm">
@@ -114,5 +102,7 @@ else
     <p>No reviews yet.</p>
 }
 
-<a asp-action="Upload" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Upload Document</a>
-<a asp-action="Dashboard" class="btn btn-secondary">Back to Dashboard</a>
+<div class="d-flex gap-2">
+    <a asp-action="Upload" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Upload document</a>
+    <a asp-action="Dashboard" class="btn btn-secondary">Back to dashboard</a>
+</div>

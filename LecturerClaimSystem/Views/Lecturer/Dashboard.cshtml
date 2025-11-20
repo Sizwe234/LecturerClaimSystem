@@ -1,17 +1,25 @@
 ﻿@model IEnumerable<LecturerClaimSystem.Models.Claim>
 @{
-    ViewBag.Title = "Lecturer Dashboard";
+    ViewBag.Title = "Lecturer dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center mb-4">
-    <h2 class="fw-bold">My Claims</h2>
-    <a asp-controller="Lecturer" asp-action="Submit" class="btn btn-success">Submit a new claim</a>
-</div>
+<h2 class="mb-3">My claims</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input type="email" name="email" class="form-control" placeholder="Filter by lecturer email" value="@Context.Request.Query["email"]" />
+    </div>
+    <div class="col-md-6">
+        <button type="submit" class="btn btn-outline-primary">Apply filter</button>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Clear</a>
+        <a asp-action="Submit" class="btn btn-primary">Submit new claim</a>
+    </div>
+</form>
 
 @if (Model == null || !Model.Any())
 {
-    <div class="alert alert-info">No claims found yet.</div>
+    <div class="alert alert-info">No claims found. Submit your first claim above.</div>
 }
 else
 {
@@ -19,25 +27,53 @@ else
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
+                    <th>Submitted</th>
                     <th>Lecturer</th>
+                    <th>Email</th>
                     <th>Hours</th>
                     <th>Rate</th>
+                    <th>Total</th>
                     <th>Status</th>
-                    <th>Submitted</th>
+                    <th>Progress</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var claim in Model)
+                @foreach (var c in Model)
                 {
+                    int progress = c.Status switch
+                    {
+                        LecturerClaimSystem.Models.ClaimStatus.Pending => 25,
+                        LecturerClaimSystem.Models.ClaimStatus.Verified => 50,
+                        LecturerClaimSystem.Models.ClaimStatus.Approved => 100,
+                        LecturerClaimSystem.Models.ClaimStatus.Declined => 100,
+                        _ => 0
+                    };
+
+                    string barClass = c.Status switch
+                    {
+                        LecturerClaimSystem.Models.ClaimStatus.Pending => "bg-warning",
+                        LecturerClaimSystem.Models.ClaimStatus.Verified => "bg-info",
+                        LecturerClaimSystem.Models.ClaimStatus.Approved => "bg-success",
+                        LecturerClaimSystem.Models.ClaimStatus.Declined => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+
                     <tr>
-                        <td>@claim.LecturerName</td>
-                        <td>@claim.HoursWorked</td>
-                        <td>@claim.HourlyRate</td>
-                        <td><span class="badge bg-secondary">@claim.Status</span></td>
-                        <td>@claim.SubmittedDate.ToShortDateString()</td>
+                        <td>@c.SubmittedDate</td>
+                        <td>@c.LecturerName</td>
+                        <td>@c.LecturerEmail</td>
+                        <td>@c.HoursWorked</td>
+                        <td>@c.HourlyRate</td>
+                        <td>@(c.HoursWorked* c.HourlyRate)</td>
+                        <td><span class="badge bg-secondary">@c.Status</span></td>
+                        <td style="min-width:150px;">
+                            <div class="progress">
+                                <div class="progress-bar @barClass" role="progressbar" style="width:@(progress + "%");"></div>
+                            </div>
+                        </td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@claim.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">View</a>
                         </td>
                     </tr>
                 }

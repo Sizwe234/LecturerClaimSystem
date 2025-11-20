@@ -1,0 +1,47 @@
+﻿@model LecturerClaimSystem.Models.Claim
+@{
+    ViewBag.Title = "Upload document";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Upload supporting document</h2>
+<p class="text-muted">Link a PDF/DOCX/XLSX to this claim. Files are stored securely with encryption.</p>
+
+<form asp-action="Upload" method="post" enctype="multipart/form-data" class="card">
+    <div class="card-body">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="mb-3">
+            <label class="form-label">Select file</label>
+            <input type="file" name="upload" class="form-control" />
+            <div class="form-text">
+                Max 10 MB. Allowed types: .pdf, .docx, .xlsx.
+            </div>
+        </div>
+
+        @if (Model.Documents != null && Model.Documents.Count > 0)
+        {
+            <label class="form-label">Already uploaded files</label>
+            <ul class="list-group">
+                @foreach (var d in Model.Documents)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @d.FileName
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-controller="Claims"
+                           asp-action="DownloadDocument"
+                           asp-route-claimId="@Model.Id"
+                           asp-route-documentId="@d.Id">Open</a>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">No files uploaded yet.</p>
+        }
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Upload</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Back to details</a>
+    </div>
+</form>
