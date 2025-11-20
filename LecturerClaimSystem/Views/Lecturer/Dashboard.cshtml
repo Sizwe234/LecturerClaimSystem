@@ -4,16 +4,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="mb-3">My claims</h2>
+<h2 class="mb-3 text-primary">My claims</h2>
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-6">
         <input type="email" name="email" class="form-control" placeholder="Filter by lecturer email" value="@Context.Request.Query["email"]" />
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6 d-flex gap-2">
         <button type="submit" class="btn btn-outline-primary">Apply filter</button>
         <a asp-action="Dashboard" class="btn btn-outline-secondary">Clear</a>
-        <a asp-action="Submit" class="btn btn-primary">Submit new claim</a>
+        <a asp-action="Submit" class="btn btn-success">Submit new claim</a>
     </div>
 </form>
 
@@ -23,9 +23,9 @@
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
+    <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
                 <tr>
                     <th>Submitted</th>
                     <th>Lecturer</th>
@@ -69,7 +69,6 @@ else
                         <td><span class="badge bg-secondary">@c.Status</span></td>
                         <td style="min-width:150px;">
                             <div class="progress">
-
                                 <div class="progress-bar @barClass" role="progressbar" style="width:@(progress + "%");"></div>
                             </div>
                         </td>
