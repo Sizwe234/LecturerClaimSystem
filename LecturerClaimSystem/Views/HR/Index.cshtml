@@ -1,0 +1,44 @@
+﻿<!-- Views/Hr/Index.cshtml -->
+@model IEnumerable<LecturerClaimSystem.Models.AppUser>
+@{
+    ViewBag.Title = "HR – Users";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-3">HR – Manage users</h2>
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-success">Create user</a>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">No users found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Hourly rate</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.FullName</td>
+                        <td>@u.Email</td>
+                        <td>@u.Role</td>
+                        <td>@u.HourlyRate</td>
+                        <td><a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-primary">Edit</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
