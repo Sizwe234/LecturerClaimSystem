@@ -52,7 +52,7 @@ namespace LecturerClaimSystem.Controllers
 		{
 			var user = await _userManager.GetUserAsync(User);
 			if (user == null)
-				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Submit", "Lecturer") });
+				return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Submit", "Lecturer") });
 
 			var model = new Claim
 			{
@@ -60,7 +60,8 @@ namespace LecturerClaimSystem.Controllers
 				LecturerEmail = user.Email!,
 				HourlyRate = user.HourlyRate,
 				HoursWorked = 0,
-				Notes = ""
+				Notes = "",
+				Status = ClaimStatus.Pending
 			};
 			return View(model);
 		}
@@ -71,17 +72,24 @@ namespace LecturerClaimSystem.Controllers
 		{
 			var user = await _userManager.GetUserAsync(User);
 			if (user == null)
-				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Submit", "Lecturer") });
+				return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Submit", "Lecturer") });
 
-			// Pull trusted fields from Identity user
 			model.LecturerName = user.FullName;
 			model.LecturerEmail = user.Email!;
 			model.HourlyRate = user.HourlyRate;
 
+			if (model.HoursWorked < 0)
+			{
+				ModelState.AddModelError(nameof(model.HoursWorked), "Hours cannot be negative.");
+			}
 			if (model.HoursWorked > 180)
 			{
 				ModelState.AddModelError(nameof(model.HoursWorked), "Hours cannot exceed 180 in a month.");
 			}
+
+			// Ensure default status
+			if (model.Status == 0)
+				model.Status = ClaimStatus.Pending;
 
 			if (!ModelState.IsValid)
 			{
@@ -89,6 +97,7 @@ namespace LecturerClaimSystem.Controllers
 				return View(model);
 			}
 
+			// Save claim
 			ClaimDataStore.AddClaim(model);
 
 			if (upload != null && upload.Length > 0)
