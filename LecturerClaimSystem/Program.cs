@@ -23,7 +23,6 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-
 builder.Services.ConfigureApplicationCookie(options =>
 {
 	options.AccessDeniedPath = "/Home/AccessDenied";
