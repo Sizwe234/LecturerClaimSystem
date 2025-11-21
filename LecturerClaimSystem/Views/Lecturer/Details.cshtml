@@ -1,108 +1,48 @@
 ﻿@model LecturerClaimSystem.Models.Claim
 @{
-    ViewBag.Title = "Claim details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Claim Details";
 }
 
-<h2>Claim details</h2>
+<div class="container mt-4">
+    <h2 class="mb-3">Claim Details</h2>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <p><strong>Lecturer:</strong> @Model.LecturerName</p>
-        <p><strong>Email:</strong> @Model.LecturerEmail</p>
-        <p><strong>Hours Worked:</strong> @Model.HoursWorked</p>
-        <p><strong>Hourly Rate:</strong> @Model.HourlyRate</p>
-        <p><strong>Total Earnings:</strong> @Model.CalculateEarnings()</p>
-        <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.Status</span></p>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Lecturer</dt>
+                <dd class="col-sm-9">@Model.LecturerName (@Model.LecturerEmail)</dd>
 
-        @{
-            int progress = Model.Status switch
+                <dt class="col-sm-3">Hours Worked</dt>
+                <dd class="col-sm-9">@Model.HoursWorked</dd>
+
+                <dt class="col-sm-3">Hourly Rate</dt>
+                <dd class="col-sm-9">@Model.HourlyRate</dd>
+
+                <dt class="col-sm-3">Earnings</dt>
+                <dd class="col-sm-9">@Model.CalculateEarnings()</dd>
+
+                <dt class="col-sm-3">Notes</dt>
+                <dd class="col-sm-9">@Model.Notes</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@Model.Status</dd>
+
+                <dt class="col-sm-3">Submitted</dt>
+                <dd class="col-sm-9">@Model.SubmittedDate</dd>
+            </dl>
+
+            @if (Model.Documents.Any())
             {
-                LecturerClaimSystem.Models.ClaimStatus.Pending => 25,
-                LecturerClaimSystem.Models.ClaimStatus.Verified => 50,
-                LecturerClaimSystem.Models.ClaimStatus.Approved => 100,
-                LecturerClaimSystem.Models.ClaimStatus.Declined => 100,
-                _ => 0
-            };
-            string barClass = Model.Status switch
-            {
-                LecturerClaimSystem.Models.ClaimStatus.Pending => "bg-warning",
-                LecturerClaimSystem.Models.ClaimStatus.Verified => "bg-info",
-                LecturerClaimSystem.Models.ClaimStatus.Approved => "bg-success",
-                LecturerClaimSystem.Models.ClaimStatus.Declined => "bg-danger",
-                _ => "bg-secondary"
-            };
-        }
-
-        <div class="mb-2">
-            <label class="form-label"><strong>Status progress</strong></label>
-            <div class="progress">
-                <div class="progress-bar @barClass" role="progressbar" style="width:@(progress + "%");"></div>
-            </div>
+                <h5 class="mt-3">Attached Documents</h5>
+                <ul>
+                    @foreach (var doc in Model.Documents)
+                    {
+                        <li>@doc.FileName</li>
+                    }
+                </ul>
+            }
         </div>
-
-        <p><strong>Notes:</strong> @Model.Notes</p>
-        <p><strong>Submitted:</strong> @Model.SubmittedDate</p>
     </div>
-</div>
 
-<h4>Supporting documents</h4>
-@if (Model.Documents != null && Model.Documents.Count > 0)
-{
-    <ul class="list-group mb-3">
-        @foreach (var d in Model.Documents)
-        {
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                @d.FileName
-                <a class="btn btn-sm btn-outline-primary"
-                   asp-controller="Claims"
-                   asp-action="DownloadDocument"
-                   asp-route-claimId="@Model.Id"
-                   asp-route-documentId="@d.Id">Open</a>
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No supporting documents uploaded.</p>
-}
-
-<h4>Review history</h4>
-@if (Model.Reviews != null && Model.Reviews.Count > 0)
-{
-    <div class="table-responsive">
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Reviewer</th>
-                    <th>Role</th>
-                    <th>Decision</th>
-                    <th>Comments</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var r in Model.Reviews)
-                {
-                    <tr>
-                        <td>@r.ReviewDate</td>
-                        <td>@r.ReviewerName</td>
-                        <td>@r.ReviewerRole</td>
-                        <td>@r.Decision</td>
-                        <td>@r.Comments</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <p>No reviews yet.</p>
-}
-
-<div class="d-flex gap-2">
-    <a asp-action="Upload" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Upload document</a>
-    <a asp-action="Dashboard" class="btn btn-secondary">Back to dashboard</a>
+    <a class="btn btn-secondary mt-3" asp-action="Dashboard">Back to Dashboard</a>
 </div>

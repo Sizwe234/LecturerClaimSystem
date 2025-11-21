@@ -49,6 +49,18 @@ namespace LecturerClaimSystem.Controllers
 		}
 
 		[HttpGet]
+		public IActionResult ReviewHistory(int id)
+		{
+			var claim = ClaimDataStore.GetClaimById(id);
+			if (claim == null)
+			{
+				TempData["Error"] = "Claim not found.";
+				return RedirectToAction(nameof(Dashboard));
+			}
+			return View(claim);
+		}
+
+		[HttpGet]
 		public async Task<IActionResult> Submit()
 		{
 			var user = await _userManager.GetUserAsync(User);

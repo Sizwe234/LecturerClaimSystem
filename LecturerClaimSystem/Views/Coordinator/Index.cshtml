@@ -1,74 +1,53 @@
 ﻿@model IEnumerable<LecturerClaimSystem.Models.Claim>
 @{
-    ViewBag.Title = "Programme Coordinator";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Coordinator Dashboard";
 }
 
-<h2 class="mb-3">Coordinator – pending claims</h2>
-<p class="text-muted">Verify or reject claims. Only Pending claims should be listed here.</p>
+<div class="container mt-4">
+    <h2 class="mb-3">Coordinator Dashboard</h2>
+    <p class="text-muted">Review and verify pending lecturer claims.</p>
 
-@if (Model == null || !Model.Any())
-{
-    <div class="alert alert-info">No pending claims.</div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
+    <table class="table table-striped table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Lecturer</th>
+                <th>Email</th>
+                <th>Hours</th>
+                <th>Rate</th>
+                <th>Earnings</th>
+                <th>Notes</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var claim in Model)
+            {
                 <tr>
-                    <th>Submitted</th>
-                    <th>Lecturer</th>
-                    <th>Email</th>
-                    <th>Hours</th>
-                    <th>Total</th>
-                    <th>Docs</th>
-                    <th>Status</th>
-                    <th style="min-width:280px;">Actions</th>
+                    <td>@claim.LecturerName</td>
+                    <td>@claim.LecturerEmail</td>
+                    <td>@claim.HoursWorked</td>
+                    <td>@claim.HourlyRate</td>
+                    <td>@claim.CalculateEarnings()</td>
+                    <td>@claim.Notes</td>
+                    <td>@claim.SubmittedDate.ToString("yyyy-MM-dd")</td>
+                    <td><span class="badge bg-warning text-dark">@claim.Status</span></td>
+                    <td>
+                        <form asp-action="Verify" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@claim.Id" />
+                            <button class="btn btn-sm btn-success">Verify</button>
+                        </form>
+                        <form asp-action="Reject" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@claim.Id" />
+                            <input type="text" name="comments" placeholder="Reason" class="form-control form-control-sm d-inline w-auto" />
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in Model)
-                {
-                    <tr>
-                        <td>@c.SubmittedDate</td>
-                        <td>@c.LecturerName</td>
-                        <td>@c.LecturerEmail</td>
-                        <td>@c.HoursWorked</td>
-                        <td>@(c.HoursWorked* c.HourlyRate)</td>
-                        <td>
-                            @if (c.Documents != null && c.Documents.Count > 0)
-                            {
-                                @foreach (var d in c.Documents)
-                                {
-                                    <a class="btn btn-sm btn-outline-primary me-1"
-                                       asp-controller="Claims"
-                                       asp-action="DownloadDocument"
-                                       asp-route-claimId="@c.Id"
-                                       asp-route-documentId="@d.Id">Open @d.FileName</a>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted">No docs</span>
-                            }
-                        </td>
-                        <td><span class="badge bg-warning">Pending</span></td>
-                        <td>
-                            <form asp-controller="Coordinator" asp-action="Verify" method="post" class="d-inline-flex gap-2 mb-2">
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="text" name="comments" class="form-control form-control-sm" placeholder="Note (optional)" />
-                                <button class="btn btn-sm btn-info" type="submit">Verify</button>
-                            </form>
-                            <form asp-controller="Coordinator" asp-action="Reject" method="post" class="d-inline-flex gap-2">
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="text" name="comments" class="form-control form-control-sm" placeholder="Reason (required)" />
-                                <button class="btn btn-sm btn-danger" type="submit">Reject</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>

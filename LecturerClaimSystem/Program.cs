@@ -12,7 +12,8 @@ var dbPath = Path.Combine(builder.Environment.ContentRootPath, "cmcs.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseSqlite($"Data Source={dbPath}"));
 
-// Identity setup
+
+
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
 	options.Password.RequireDigit = false;
@@ -24,7 +25,6 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// Friendly AccessDenied
 builder.Services.ConfigureApplicationCookie(options =>
 {
 	options.AccessDeniedPath = "/Home/AccessDenied";
@@ -35,11 +35,10 @@ builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 
-// Seed roles + default HR user
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-	db.Database.Migrate();
+	db.Database.Migrate(); 
 
 	var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 	var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
@@ -51,10 +50,12 @@ using (var scope = app.Services.CreateScope())
 			await roleMgr.CreateAsync(new IdentityRole(r));
 	}
 
-	var hrEmail = "hr@cmcs.local";
-	if (await userMgr.FindByEmailAsync(hrEmail) is null)
+	var hrEmail = "hr@cms.local";
+	AppUser? hrUser = await userMgr.FindByEmailAsync(hrEmail);
+
+	if (hrUser is null)
 	{
-		var hr = new AppUser
+		hrUser = new AppUser
 		{
 			UserName = hrEmail,
 			Email = hrEmail,
@@ -63,8 +64,17 @@ using (var scope = app.Services.CreateScope())
 			HourlyRate = 0,
 			EmailConfirmed = true
 		};
-		await userMgr.CreateAsync(hr, "Pass@123");
-		await userMgr.AddToRoleAsync(hr, "HR");
+		await userMgr.CreateAsync(hrUser, "Pass@123");
+	}
+
+	var currentRoles = await userMgr.GetRolesAsync(hrUser);
+	if (currentRoles.Count > 0)
+	{
+		await userMgr.RemoveFromRolesAsync(hrUser, currentRoles);
+	}
+	if (!await userMgr.IsInRoleAsync(hrUser, "HR"))
+	{
+		await userMgr.AddToRoleAsync(hrUser, "HR");
 	}
 }
 
@@ -83,7 +93,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Standard MVC route
 app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");

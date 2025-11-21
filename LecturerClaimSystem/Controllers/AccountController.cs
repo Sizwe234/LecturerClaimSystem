@@ -32,7 +32,6 @@ namespace LecturerClaimSystem.Controllers
 		{
 			if (!ModelState.IsValid) return View(model);
 
-			// Sign in by email (userName == email in your setup)
 			var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 			if (!result.Succeeded)
 			{
@@ -47,11 +46,11 @@ namespace LecturerClaimSystem.Controllers
 				return View(model);
 			}
 
-			// Respect returnUrl if provided
 			if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
 				return Redirect(returnUrl);
 
 			var roles = await _userManager.GetRolesAsync(user);
+
 			if (roles.Contains("HR")) return RedirectToAction("Index", "Hr");
 			if (roles.Contains("Coordinator")) return RedirectToAction("Index", "Coordinator");
 			if (roles.Contains("Manager")) return RedirectToAction("Index", "Manager");

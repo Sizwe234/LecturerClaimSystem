@@ -4,14 +4,14 @@ namespace LecturerClaimSystem.ViewModels
 {
 	public class LoginViewModel
 	{
-		[Required]
-		[EmailAddress]
-		public required string Email { get; set; }
+		[Required(ErrorMessage = "Email is required")]
+		[EmailAddress(ErrorMessage = "Please enter a valid email")]
+		public string Email { get; set; } = string.Empty;
 
-		[Required]
+		[Required(ErrorMessage = "Password is required")]
 		[DataType(DataType.Password)]
-		public required string Password { get; set; }
+		public string Password { get; set; } = string.Empty;
 
-		public bool RememberMe { get; set; }
+		public bool RememberMe { get; set; } = false;
 	}
 }

@@ -1,56 +1,53 @@
 ﻿@model IEnumerable<LecturerClaimSystem.Models.Claim>
 @{
-    ViewBag.Title = "Manager – verified claims";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manager Dashboard";
 }
 
-<h2 class="mb-3">Manager – verified claims</h2>
-<p class="text-muted">Approve or decline verified claims.</p>
+<div class="container mt-4">
+    <h2 class="mb-3">Manager Dashboard</h2>
+    <p class="text-muted">Approve or decline verified claims for payment.</p>
 
-@if (Model == null || !Model.Any())
-{
-    <div class="alert alert-info">No verified claims available.</div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
+    <table class="table table-striped table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Lecturer</th>
+                <th>Email</th>
+                <th>Hours</th>
+                <th>Rate</th>
+                <th>Earnings</th>
+                <th>Notes</th>
+                <th>Verified Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var claim in Model)
+            {
                 <tr>
-                    <th>Submitted</th>
-                    <th>Lecturer</th>
-                    <th>Email</th>
-                    <th>Hours</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th style="min-width:280px;">Actions</th>
+                    <td>@claim.LecturerName</td>
+                    <td>@claim.LecturerEmail</td>
+                    <td>@claim.HoursWorked</td>
+                    <td>@claim.HourlyRate</td>
+                    <td>@claim.CalculateEarnings()</td>
+                    <td>@claim.Notes</td>
+                    <td>@claim.ReviewedDate?.ToString("yyyy-MM-dd")</td>
+                    <td><span class="badge bg-info text-dark">@claim.Status</span></td>
+                    <td>
+                        <form asp-action="Approve" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@claim.Id" />
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form asp-action="Decline" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@claim.Id" />
+                            <input type="text" name="comments" placeholder="Reason" class="form-control form-control-sm d-inline w-auto" />
+                            <button class="btn btn-sm btn-danger">Decline</button>
+                        </form>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in Model)
-                {
-                    <tr>
-                        <td>@c.SubmittedDate</td>
-                        <td>@c.LecturerName</td>
-                        <td>@c.LecturerEmail</td>
-                        <td>@c.HoursWorked</td>
-                        <td>@(c.HoursWorked* c.HourlyRate)</td>
-                        <td><span class="badge bg-info">Verified</span></td>
-                        <td>
-                            <form asp-controller="Manager" asp-action="Approve" method="post" class="d-inline-flex gap-2 mb-2">
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="text" name="comments" class="form-control form-control-sm" placeholder="Note (optional)" />
-                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
-                            </form>
-                            <form asp-controller="Manager" asp-action="Decline" method="post" class="d-inline-flex gap-2">
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="text" name="comments" class="form-control form-control-sm" placeholder="Reason (required)" />
-                                <button class="btn btn-sm btn-danger" type="submit">Decline</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
