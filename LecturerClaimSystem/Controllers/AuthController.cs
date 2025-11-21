@@ -1,19 +1,18 @@
-﻿
-using LecturerClaimSystem.Data;
-using LecturerClaimSystem.Helpers;
+﻿using LecturerClaimSystem.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
 {
 	public class AuthController : Controller
 	{
-		private readonly AppDbContext _db;
+		private readonly SignInManager<AppUser> _signIn;
+		private readonly UserManager<AppUser> _users;
 
-		public AuthController(AppDbContext db)
+		public AuthController(SignInManager<AppUser> signIn, UserManager<AppUser> users)
 		{
-			_db = db;
+			_signIn = signIn;
+			_users = users;
 		}
 
 		[HttpGet]
@@ -25,30 +24,38 @@ namespace LecturerClaimSystem.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public IActionResult Login(string email, string password, string? returnUrl = null)
+		public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
 		{
-			var user = _db.Users.FirstOrDefault(u => u.Email.ToLower() == email.ToLower() && u.Password == password);
+			var user = await _users.FindByEmailAsync(email);
 			if (user == null)
 			{
 				TempData["Error"] = "Invalid email or password.";
 				return View();
 			}
 
-			HttpContext.Session.SetString("UserEmail", user.Email);
-			HttpContext.Session.SetString("UserName", user.FullName);
-			HttpContext.Session.SetString("UserRole", user.Role.ToString());
+			var result = await _signIn.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
+			if (!result.Succeeded)
+			{
+				TempData["Error"] = "Invalid email or password.";
+				return View();
+			}
 
 			TempData["Success"] = $"Welcome, {user.FullName}";
 			if (!string.IsNullOrWhiteSpace(returnUrl)) return Redirect(returnUrl);
 
+			
+			var roles = await _users.GetRolesAsync(user);
+			if (roles.Contains("HR")) return RedirectToAction("Index", "Hr");
+			if (roles.Contains("Coordinator")) return RedirectToAction("Index", "Coordinator");
+			if (roles.Contains("Manager")) return RedirectToAction("Index", "Manager");
 			return RedirectToAction("Dashboard", "Lecturer");
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public IActionResult Logout()
+		public async Task<IActionResult> Logout()
 		{
-			HttpContext.Session.Clear();
+			await _signIn.SignOutAsync();
 			TempData["Success"] = "Logged out.";
 			return RedirectToAction("Login");
 		}
