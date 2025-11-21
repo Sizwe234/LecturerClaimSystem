@@ -1,29 +1,16 @@
 ﻿using LecturerClaimSystem.Data;
-using LecturerClaimSystem.Helpers;
 using LecturerClaimSystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 
 namespace LecturerClaimSystem.Controllers
 {
+	[Authorize(Roles = "Coordinator")]
 	public class CoordinatorController : Controller
 	{
-		private IActionResult Gate()
-		{
-			if (!HttpContext.Session.IsLoggedIn())
-				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Index", "Coordinator") });
-			if (!HttpContext.Session.IsRole(UserRole.Coordinator.ToString()))
-			{
-				TempData["Error"] = "Access denied: Coordinator only.";
-				return RedirectToAction("Dashboard", "Lecturer");
-			}
-			return null!;
-		}
-
 		[HttpGet]
 		public IActionResult Index()
 		{
-			var g = Gate(); if (g != null) return g;
 			var pending = ClaimDataStore.GetClaimsByStatus(ClaimStatus.Pending);
 			return View(pending);
 		}
@@ -32,7 +19,6 @@ namespace LecturerClaimSystem.Controllers
 		[ValidateAntiForgeryToken]
 		public IActionResult Verify(int id, string? comments)
 		{
-			var g = Gate(); if (g != null) return g;
 			var note = string.IsNullOrWhiteSpace(comments) ? "Verified by Programme Coordinator" : comments!;
 			var ok = ClaimDataStore.UpdateClaimStatus(id, ClaimStatus.Verified, "Programme Coordinator", note);
 			TempData[ok ? "Success" : "Error"] = ok ? "Claim verified." : "Claim not found.";
@@ -43,7 +29,6 @@ namespace LecturerClaimSystem.Controllers
 		[ValidateAntiForgeryToken]
 		public IActionResult Reject(int id, string? comments)
 		{
-			var g = Gate(); if (g != null) return g;
 			if (string.IsNullOrWhiteSpace(comments))
 			{
 				TempData["Error"] = "Please provide a reason for rejection.";
