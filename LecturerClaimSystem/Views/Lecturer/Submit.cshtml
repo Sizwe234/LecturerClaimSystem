@@ -1,72 +1,56 @@
 ﻿@model LecturerClaimSystem.Models.Claim
 @{
-    ViewBag.Title = "Submit claim";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Submit Claim";
 }
 
-<h2 class="mb-3 text-primary">Submit a claim</h2>
-<p class="text-muted">Your name and hourly rate are set by HR. Enter hours and upload documents.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    Submit Lecturer Claim
+                </div>
+                <div class="card-body">
+                    <form asp-action="Submit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
 
-<form asp-action="Submit" method="post" enctype="multipart/form-data" class="card shadow-sm">
-    @Html.AntiForgeryToken()
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Lecturer name</label>
-                <input class="form-control" value="@Model?.LecturerName" readonly />
-            </div>
+                        <div class="mb-3">
+                            <label asp-for="LecturerName" class="form-label"></label>
+                            <input asp-for="LecturerName" class="form-control" readonly />
+                        </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Lecturer email</label>
-                <input class="form-control" value="@Model?.LecturerEmail" readonly />
-            </div>
+                        <div class="mb-3">
+                            <label asp-for="LecturerEmail" class="form-label"></label>
+                            <input asp-for="LecturerEmail" class="form-control" readonly />
+                        </div>
 
-            <div class="col-md-4">
-                <label asp-for="HoursWorked" class="form-label fw-bold">Hours worked</label>
-                <input asp-for="HoursWorked" class="form-control" id="hours" />
-                <span asp-validation-for="HoursWorked" class="text-danger"></span>
-                <div class="form-text">Maximum 180 hours per month.</div>
-            </div>
+                        <div class="mb-3">
+                            <label asp-for="HoursWorked" class="form-label"></label>
+                            <input asp-for="HoursWorked" class="form-control" />
+                            <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                        </div>
 
-            <div class="col-md-4">
-                <label class="form-label fw-bold">Hourly rate</label>
-                <input class="form-control bg-light" id="rate" value="@Model?.HourlyRate" readonly />
-            </div>
+                        <div class="mb-3">
+                            <label asp-for="HourlyRate" class="form-label"></label>
+                            <input asp-for="HourlyRate" class="form-control" readonly />
+                        </div>
 
-            <div class="col-md-4">
-                <label class="form-label fw-bold">Auto calculation</label>
-                <input class="form-control bg-light" id="total" value="@(Model?.HoursWorked * Model?.HourlyRate)" readonly />
-            </div>
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
 
-            <div class="col-12">
-                <label class="form-label fw-bold">Supporting documents</label>
-                <input type="file" name="upload" class="form-control" accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png" />
-                <div class="form-text">Upload your documents here (PDF, DOCX, XLSX, JPG, JPEG, PNG). Max 10 MB.</div>
+                        <div class="mb-3">
+                            <label class="form-label">Attach Document (optional)</label>
+                            <input type="file" name="upload" class="form-control" />
+                            <small class="text-muted">Allowed: .pdf, .docx, .xlsx, .jpg, .jpeg, .png (max 10MB)</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Submit Claim</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-    <div class="card-footer d-flex justify-content-between">
-        <a asp-action="Dashboard" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Submit claim
-        </button>
-    </div>
-</form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        const hours = document.getElementById('hours');
-        const rate = document.getElementById('rate');
-        const total = document.getElementById('total');
-        function recalc() {
-            const h = parseFloat(hours.value || '0');
-            const r = parseFloat(rate.value || '0');
-            total.value = (h * r).toFixed(2);
-        }
-        hours.addEventListener('input', recalc);
-        recalc();
-    </script>
-}
+</div>
