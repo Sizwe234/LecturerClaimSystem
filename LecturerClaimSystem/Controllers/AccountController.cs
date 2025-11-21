@@ -2,6 +2,7 @@
 using LecturerClaimSystem.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LecturerClaimSystem.Controllers
 {
@@ -17,44 +18,50 @@ namespace LecturerClaimSystem.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult Login()
+		[AllowAnonymous]
+		public IActionResult Login(string? returnUrl = null)
 		{
-			return View();
+			ViewBag.ReturnUrl = returnUrl;
+			return View(new LoginViewModel());
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Login(LoginViewModel model)
+		[AllowAnonymous]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
 		{
 			if (!ModelState.IsValid) return View(model);
 
-			var result = await _signInManager.PasswordSignInAsync(
-				model.Email, model.Password, model.RememberMe, false);
-
-			if (result.Succeeded)
+			// Sign in by email (userName == email in your setup)
+			var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+			if (!result.Succeeded)
 			{
-				var user = await _userManager.FindByEmailAsync(model.Email);
-				if (user == null)
-				{
-					ModelState.AddModelError("", "User not found.");
-					return View(model);
-				}
-
-				var roles = await _userManager.GetRolesAsync(user);
-
-				if (roles.Contains("HR"))
-					return RedirectToAction("Index", "Hr");
-				else if (roles.Contains("Lecturer"))
-					return RedirectToAction("Submit", "Lecturer");
-				else if (roles.Contains("Coordinator"))
-					return RedirectToAction("Index", "Coordinator");
-
-				return RedirectToAction("Index", "Home");
+				ModelState.AddModelError("", "Invalid login attempt.");
+				return View(model);
 			}
 
-			ModelState.AddModelError("", "Invalid login attempt.");
-			return View(model);
+			var user = await _userManager.FindByEmailAsync(model.Email);
+			if (user == null)
+			{
+				ModelState.AddModelError("", "User not found.");
+				return View(model);
+			}
+
+			// Respect returnUrl if provided
+			if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+				return Redirect(returnUrl);
+
+			var roles = await _userManager.GetRolesAsync(user);
+			if (roles.Contains("HR")) return RedirectToAction("Index", "Hr");
+			if (roles.Contains("Coordinator")) return RedirectToAction("Index", "Coordinator");
+			if (roles.Contains("Manager")) return RedirectToAction("Index", "Manager");
+			if (roles.Contains("Lecturer")) return RedirectToAction("Dashboard", "Lecturer");
+
+			return RedirectToAction("Index", "Home");
 		}
 
+		[HttpPost]
+		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> Logout()
 		{
 			await _signInManager.SignOutAsync();
