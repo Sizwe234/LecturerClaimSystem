@@ -38,5 +38,15 @@ namespace LecturerClaimSystem.Controllers
 			TempData[ok ? "Success" : "Error"] = ok ? "Claim rejected." : "Claim not found.";
 			return RedirectToAction(nameof(Index));
 		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult Approve(int id, string? comments)
+		{
+			var note = string.IsNullOrWhiteSpace(comments) ? "Approved by Programme Coordinator" : comments!;
+			var ok = ClaimDataStore.UpdateClaimStatus(id, ClaimStatus.Approved, "Programme Coordinator", note);
+			TempData[ok ? "Success" : "Error"] = ok ? "Claim approved." : "Claim not found.";
+			return RedirectToAction(nameof(Index));
+		}
 	}
 }

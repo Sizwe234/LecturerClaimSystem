@@ -15,22 +15,17 @@ namespace LecturerClaimSystem.Controllers
 			_users = users;
 		}
 
-
 		[HttpGet]
 		public IActionResult Index()
 		{
 			return View(_users.Users.ToList());
 		}
 
-		
-
 		[HttpGet]
 		public IActionResult Create()
 		{
 			return View(new AppUser());
 		}
-
-		
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -68,8 +63,6 @@ namespace LecturerClaimSystem.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-		
-
 		[HttpGet]
 		public async Task<IActionResult> Edit(string id)
 		{
@@ -77,8 +70,6 @@ namespace LecturerClaimSystem.Controllers
 			if (user == null) return NotFound();
 			return View(user);
 		}
-
-		
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -100,7 +91,6 @@ namespace LecturerClaimSystem.Controllers
 				return View(model);
 			}
 
-
 			if (!string.IsNullOrWhiteSpace(password))
 			{
 				var token = await _users.GeneratePasswordResetTokenAsync(user);
@@ -111,7 +101,6 @@ namespace LecturerClaimSystem.Controllers
 					return View(model);
 				}
 			}
-
 
 			var currentRoles = await _users.GetRolesAsync(user);
 			await _users.RemoveFromRolesAsync(user, currentRoles);

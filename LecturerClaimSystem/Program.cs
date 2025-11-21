@@ -8,13 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-
-
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "cmcs.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseSqlite($"Data Source={dbPath}"));
-
-
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -27,16 +23,20 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+	options.AccessDeniedPath = "/Home/AccessDenied";
+});
+
 builder.Services.AddSingleton<FileStorageService>();
 builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 
-
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-	db.Database.EnsureCreated();
+	db.Database.Migrate();
 
 	var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 	var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
@@ -76,11 +76,12 @@ else
 
 app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
 	name: "default",
-	pattern: "{controller=Lecturer}/{action=Dashboard}/{id?}");
+	pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
