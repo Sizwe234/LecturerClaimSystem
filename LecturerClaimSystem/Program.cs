@@ -35,7 +35,7 @@ builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 
-// Seed roles + HR user
+// Seed roles + default HR user
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -83,6 +83,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Standard MVC route
 app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");
