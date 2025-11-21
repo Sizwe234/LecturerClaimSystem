@@ -1,12 +1,10 @@
-﻿
-@model LecturerClaimSystem.Models.AppUser
+﻿@model LecturerClaimSystem.Models.AppUser
 @{
     ViewBag.Title = "Create user";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
 <h2>Create user</h2>
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" class="card p-3 shadow-sm">
     @Html.AntiForgeryToken()
     <div class="row g-3">
         <div class="col-md-6">
@@ -25,19 +23,22 @@
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
         <div class="col-md-6">
-            <label asp-for="Password" class="form-label">Password</label>
-            <input asp-for="Password" class="form-control" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="Role" class="form-label">Role</label>
-            <select asp-for="Role" class="form-select"
-                    asp-items="Html.GetEnumSelectList<LecturerClaimSystem.Models.UserRole>()"></select>
+            <label class="form-label">Password</label>
+            <input name="password" type="password" class="form-control" required />
         </div>
         <div class="col-md-6">
             <label asp-for="HourlyRate" class="form-label">Hourly rate</label>
             <input asp-for="HourlyRate" class="form-control" />
             <span asp-validation-for="HourlyRate" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select" required>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Coordinator">Coordinator</option>
+                <option value="Manager">Manager</option>
+                <option value="HR">HR</option>
+            </select>
         </div>
     </div>
     <div class="mt-3">
@@ -45,3 +46,7 @@
         <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
     </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
