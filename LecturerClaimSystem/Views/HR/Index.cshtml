@@ -1,43 +1,35 @@
 ﻿@model IEnumerable<LecturerClaimSystem.Models.AppUser>
 @{
-    ViewBag.Title = "HR – Users";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "HR Dashboard";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="m-0">HR – Manage users</h2>
-    <a asp-action="Create" class="btn btn-success">Create user</a>
-</div>
+<div class="container mt-4">
+    <h2 class="mb-3">HR Dashboard</h2>
+    <p class="text-muted">Manage users and assign roles.</p>
 
-@if (Model == null || !Model.Any())
-{
-    <div class="alert alert-info">No users found.</div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
+    <a class="btn btn-primary mb-3" asp-action="Create">Create New User</a>
+
+    <table class="table table-striped table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Hourly Rate</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Hourly rate</th>
-                    <th></th>
+                    <td>@user.FirstName @user.LastName</td>
+                    <td>@user.Email</td>
+                    <td>@user.HourlyRate</td>
+                    <td>
+                        <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var u in Model)
-                {
-                    <tr>
-                        <td>@u.FullName</td>
-                        <td>@u.Email</td>
-                        <td>@u.HourlyRate</td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-primary">Edit</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
