@@ -10,11 +10,12 @@ using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
 {
-	[Authorize(Roles = "Lecturer")]
+	// HR can submit on behalf of someone; Lecturer submits for themselves
+	[Authorize(Roles = "Lecturer,HR")]
 	public class LecturerController : Controller
 	{
 		private readonly FileStorageService _files;
-		private readonly AppDbContext _db;
+		private readonly AppDbContext _db; // in case you move off ClaimDataStore later
 		private readonly UserManager<AppUser> _userManager;
 
 		public LecturerController(FileStorageService files, AppDbContext db, UserManager<AppUser> userManager)
@@ -74,6 +75,7 @@ namespace LecturerClaimSystem.Controllers
 			if (user == null)
 				return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Submit", "Lecturer") });
 
+			// Trusted fields from Identity
 			model.LecturerName = user.FullName;
 			model.LecturerEmail = user.Email!;
 			model.HourlyRate = user.HourlyRate;
@@ -97,9 +99,10 @@ namespace LecturerClaimSystem.Controllers
 				return View(model);
 			}
 
-			// Save claim
+			// Persist claim (ClaimDataStore handles Id assignment internally)
 			ClaimDataStore.AddClaim(model);
 
+			// Optional file upload
 			if (upload != null && upload.Length > 0)
 			{
 				var extOk = new[] { ".pdf", ".docx", ".xlsx", ".jpg", ".jpeg", ".png" };
@@ -127,6 +130,11 @@ namespace LecturerClaimSystem.Controllers
 			{
 				TempData["Success"] = "Claim submitted.";
 			}
+
+			// Redirect: if HR submitted, go to HR Index; otherwise lecturer dashboard
+			var roles = await _userManager.GetRolesAsync(user);
+			if (roles.Contains("HR"))
+				return RedirectToAction("Index", "Hr");
 
 			return RedirectToAction(nameof(Dashboard), new { email = user.Email });
 		}

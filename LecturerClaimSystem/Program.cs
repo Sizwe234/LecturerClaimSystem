@@ -12,6 +12,7 @@ var dbPath = Path.Combine(builder.Environment.ContentRootPath, "cmcs.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseSqlite($"Data Source={dbPath}"));
 
+// Identity setup
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
 	options.Password.RequireDigit = false;
@@ -23,6 +24,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+// Friendly AccessDenied
 builder.Services.ConfigureApplicationCookie(options =>
 {
 	options.AccessDeniedPath = "/Home/AccessDenied";
@@ -33,6 +35,7 @@ builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 
+// Seed roles + HR user
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
