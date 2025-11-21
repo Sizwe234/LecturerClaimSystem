@@ -24,7 +24,7 @@ namespace LecturerClaimSystem.Models
 		[EmailAddress(ErrorMessage = "Please enter a valid email")]
 		public string LecturerEmail { get; set; } = string.Empty;
 
-		[Range(1, 1000, ErrorMessage = "Hours must be between 1 and 1000")]
+		[Range(1, 180, ErrorMessage = "Hours must be between 1 and 180")]
 		public int HoursWorked { get; set; }
 
 		[Range(1, 100000, ErrorMessage = "Rate must be between 1 and 100000")]
