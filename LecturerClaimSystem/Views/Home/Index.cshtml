@@ -1,8 +1,59 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Contract Monthly Claim System</h2>
+        <p class="text-muted">Simple, fast, and secure claims for lecturers. Role-specific dashboards for HR, Coordinator, and Manager.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-success text-white">Lecturer</div>
+                <div class="card-body">
+                    <p>Submit and track your claims with attachments and notes.</p>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-success" asp-controller="Lecturer" asp-action="Dashboard">Dashboard</a>
+                        <a class="btn btn-outline-success" asp-controller="Lecturer" asp-action="Submit">Submit claim</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-primary text-white">HR</div>
+                <div class="card-body">
+                    <p>Register users, assign roles, and manage lecturer details.</p>
+                    <a class="btn btn-primary" asp-controller="Hr" asp-action="Index">HR dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-warning text-dark">Coordinator</div>
+                <div class="card-body">
+                    <p>Verify or reject pending claims from lecturers.</p>
+                    <a class="btn btn-warning text-dark" asp-controller="Coordinator" asp-action="Index">Coordinator dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-secondary text-white">Manager</div>
+                <div class="card-body">
+                    <p>Approve verified claims for payment or decline with reasons.</p>
+                    <a class="btn btn-secondary" asp-controller="Manager" asp-action="Index">Manager dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <strong>Note:</strong> Some areas require specific role permissions. If you see “Access Denied,” please log in with the correct role or ask HR to update your role.
+    </div>
 </div>

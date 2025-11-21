@@ -4,7 +4,7 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-danger text-white">
                     Restricted area
@@ -12,14 +12,10 @@
                 <div class="card-body">
                     <h4 class="mb-3">Access denied</h4>
                     <p>You don’t have permission to view this page. Please log in with the correct role or navigate to your dashboard.</p>
-                    <ul class="mb-3">
-                        <li>Lecturers: Lecturer → Dashboard</li>
-                        <li>HR: HR → Index (manage users)</li>
-                        <li>Coordinators: Coordinator → Index</li>
-                        <li>Managers: Manager → Index</li>
-                    </ul>
-                    <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Go to login</a>
-                    <a class="btn btn-outline-secondary ms-2" asp-controller="Home" asp-action="Index">Back to home</a>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Go to login</a>
+                        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Back to home</a>
+                    </div>
                 </div>
             </div>
         </div>
