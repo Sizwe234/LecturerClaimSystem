@@ -1,5 +1,4 @@
 using LecturerClaimSystem.Data;
-using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 
+var dbPath = Path.Combine(builder.Environment.ContentRootPath, "cmcs.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "cmcs.db")}"));
+	options.UseSqlite($"Data Source={dbPath}"));
+
 
 builder.Services.AddSingleton<FileStorageService>();
 builder.Services.AddSingleton<ReportService>();
@@ -32,14 +33,18 @@ using (var scope = app.Services.CreateScope())
 	db.Database.EnsureCreated();
 }
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+	app.UseDeveloperExceptionPage();
+}
+else
 {
 	app.UseExceptionHandler("/Home/Error");
 }
 
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession(); // enable sessions
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -1,4 +1,4 @@
-﻿// Helpers/AuthExtensions.cs
+﻿
 using Microsoft.AspNetCore.Http;
 
 namespace LecturerClaimSystem.Helpers

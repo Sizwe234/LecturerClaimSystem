@@ -13,12 +13,12 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label fw-bold">Lecturer name</label>
-                <input class="form-control" value="@Model.LecturerName" readonly />
+                <input class="form-control" value="@Model?.LecturerName" readonly />
             </div>
 
             <div class="col-md-6">
                 <label class="form-label fw-bold">Lecturer email</label>
-                <input class="form-control" value="@Model.LecturerEmail" readonly />
+                <input class="form-control" value="@Model?.LecturerEmail" readonly />
             </div>
 
             <div class="col-md-4">
@@ -30,45 +30,55 @@
 
             <div class="col-md-4">
                 <label class="form-label fw-bold">Hourly rate</label>
-                <input class="form-control bg-light" id="rate" value="@Model.HourlyRate" readonly />
+                <input class="form-control bg-light" id="rate" value="@Model?.HourlyRate" readonly />
             </div>
 
             <div class="col-md-4">
                 <label class="form-label fw-bold">Auto calculation</label>
-                <input class="form-control bg-light" id="total" value="@(Model.HoursWorked* Model.HourlyRate)" readonly />
+                <input class="form-control bg-light" id="total" value="@(Model?.HoursWorked * Model?.HourlyRate)" readonly />
             </div>
 
             <div class="col-12">
-                <label asp-for="Notes" class="form-label fw-bold">Additional notes</label>
-                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Notes" class="text-danger"></span>
+                <label class="form-label fw-bold">Supporting documents</label>
+                <input type="file" name="upload" class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple />
+                <div class="form-text">Upload your documents here (PDF, DOC, JPG, PNG).</div>
             </div>
 
             <div class="col-12">
-                <label class="form-label fw-bold">Upload supporting document</label>
-                <input type="file" name="upload" class="form-control" accept=".pdf,.docx,.xlsx" />
-                <div class="form-text">Max 10 MB. Types: .pdf, .docx, .xlsx.</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="terms" />
+                    <label class="form-check-label" for="terms">
+                        I confirm that the above information is correct and upload the necessary documents.
+                    </label>
+                </div>
+                <span asp-validation-summary="ModelOnly" class="text-danger"></span>
             </div>
         </div>
     </div>
-    <div class="card-footer d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Submit claim</button>
-        <a asp-action="Dashboard" class="btn btn-outline-secondary">Back to dashboard</a>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between">
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Submit claim
+            </button>
+        </div>
     </div>
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
-        const hours = document.getElementById('hours');
-        const rate = document.getElementById('rate');
-        const total = document.getElementById('total');
-        function recalc() {
-            const h = parseFloat(hours.value || '0');
-            const r = parseFloat(rate.value || '0');
-            total.value = (h * r).toFixed(2);
-        }
-        hours.addEventListener('input', recalc);
-        recalc();
+        $(document).ready(function () {
+            $('#hours').on('input', function () {
+                var hours = $(this).val();
+                var rate = $('#rate').val();
+                var total = hours * rate;
+                $('#total').val(total);
+            });
+        });
     </script>
 }

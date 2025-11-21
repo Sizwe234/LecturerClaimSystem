@@ -1,7 +1,9 @@
 ﻿using LecturerClaimSystem.Data;
+using LecturerClaimSystem.Helpers;
 using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 

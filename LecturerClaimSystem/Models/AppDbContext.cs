@@ -7,13 +7,21 @@ namespace LecturerClaimSystem.Data
 {
 	public class AppDbContext : DbContext
 	{
-		public DbSet<AppUser> Users { get; set; }
-		public DbSet<Claim> Claims { get; set; }
+		public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+		{
+		}
 
-		public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+		public DbSet<AppUser> Users { get; set; } = null!;
+		public DbSet<Claim> Claims { get; set; } = null!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+
+			modelBuilder.Entity<AppUser>()
+						.HasIndex(u => u.Email)
+						.IsUnique();
+
+
 			modelBuilder.Entity<AppUser>().HasData(new AppUser
 			{
 				Id = 1,

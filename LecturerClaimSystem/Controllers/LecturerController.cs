@@ -1,5 +1,4 @@
-﻿
-using LecturerClaimSystem.Data;
+﻿using LecturerClaimSystem.Data;
 using LecturerClaimSystem.Helpers;
 using LecturerClaimSystem.Models;
 using LecturerClaimSystem.Services;
@@ -65,12 +64,14 @@ namespace LecturerClaimSystem.Controllers
 			if (lecturer == null)
 				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Submit", "Lecturer") });
 
-			// Pre-fill with lecturer details; HourlyRate pulled from HR data
+			// Always pass a Claim model to avoid NullReference
 			var model = new Claim
 			{
 				LecturerName = lecturer.FullName,
 				LecturerEmail = lecturer.Email,
-				HourlyRate = lecturer.HourlyRate
+				HourlyRate = lecturer.HourlyRate,
+				HoursWorked = 0,
+				Notes = ""
 			};
 			return View(model);
 		}
