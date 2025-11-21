@@ -1,114 +1,65 @@
-﻿
-using LecturerClaimSystem.Data;
-using LecturerClaimSystem.Helpers;
-using LecturerClaimSystem.Models;
+﻿using LecturerClaimSystem.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
 {
+	[Authorize(Roles = "HR")]
 	public class HrController : Controller
 	{
-		private readonly AppDbContext _db;
+		private readonly UserManager<AppUser> _users;
 
-		public HrController(AppDbContext db)
+		public HrController(UserManager<AppUser> users)
 		{
-			_db = db;
-		}
-
-		private IActionResult EnsureHr()
-		{
-			if (!HttpContext.Session.IsLoggedIn())
-				return RedirectToAction("Login", "Auth", new { returnUrl = Url.Action("Index", "Hr") });
-			if (!HttpContext.Session.IsRole(UserRole.HR.ToString()))
-			{
-				TempData["Error"] = "Access denied: HR only.";
-				return RedirectToAction("Dashboard", "Lecturer");
-			}
-			return null!;
+			_users = users;
 		}
 
 		[HttpGet]
 		public IActionResult Index()
 		{
-			var gate = EnsureHr(); if (gate != null) return gate;
-			var users = _db.Users.OrderBy(u => u.Role).ThenBy(u => u.LastName).ToList();
-			return View(users);
+			return View(_users.Users.ToList());
 		}
 
 		[HttpGet]
 		public IActionResult Create()
 		{
-			var gate = EnsureHr(); if (gate != null) return gate;
-			return View(new AppUser { Role = UserRole.Lecturer, HourlyRate = 0 });
+			return View(new AppUser());
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public IActionResult Create(AppUser model)
+		public async Task<IActionResult> Create(AppUser model, string password, string role)
 		{
-			var gate = EnsureHr(); if (gate != null) return gate;
-
 			if (!ModelState.IsValid)
 			{
 				TempData["Error"] = "Please fix validation errors.";
 				return View(model);
 			}
 
-			if (_db.Users.Any(u => u.Email.ToLower() == model.Email.ToLower()))
+			var existing = await _users.FindByEmailAsync(model.Email!);
+			if (existing != null)
 			{
 				TempData["Error"] = "Email already exists.";
 				return View(model);
 			}
 
-			_db.Users.Add(model);
-			_db.SaveChanges();
-			TempData["Success"] = "User created.";
-			return RedirectToAction(nameof(Index));
-		}
+			model.UserName = model.Email!;
+			model.EmailConfirmed = true;
 
-		[HttpGet]
-		public IActionResult Edit(int id)
-		{
-			var gate = EnsureHr(); if (gate != null) return gate;
-			var user = _db.Users.Find(id);
-			if (user == null)
+			var createResult = await _users.CreateAsync(model, password);
+			if (!createResult.Succeeded)
 			{
-				TempData["Error"] = "User not found.";
-				return RedirectToAction(nameof(Index));
-			}
-			return View(user);
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public IActionResult Edit(AppUser model)
-		{
-			var gate = EnsureHr(); if (gate != null) return gate;
-
-			if (!ModelState.IsValid)
-			{
-				TempData["Error"] = "Please fix validation errors.";
+				TempData["Error"] = string.Join("; ", createResult.Errors.Select(e => e.Description));
 				return View(model);
 			}
 
-			var existing = _db.Users.Find(model.Id);
-			if (existing == null)
+			if (!string.IsNullOrWhiteSpace(role))
 			{
-				TempData["Error"] = "User not found.";
-				return RedirectToAction(nameof(Index));
+				await _users.AddToRoleAsync(model, role);
 			}
 
-			existing.FirstName = model.FirstName;
-			existing.LastName = model.LastName;
-			existing.Email = model.Email;
-			existing.Password = model.Password;
-			existing.HourlyRate = model.HourlyRate;
-			existing.Role = model.Role;
-
-			_db.SaveChanges();
-			TempData["Success"] = "User updated.";
+			TempData["Success"] = "User created.";
 			return RedirectToAction(nameof(Index));
 		}
 	}
