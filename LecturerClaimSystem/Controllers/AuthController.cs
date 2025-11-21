@@ -33,7 +33,7 @@ namespace LecturerClaimSystem.Controllers
 				return View();
 			}
 
-			var result = await _signIn.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
+			var result = await _signIn.PasswordSignInAsync(user, password, false, false);
 			if (!result.Succeeded)
 			{
 				TempData["Error"] = "Invalid email or password.";
@@ -43,7 +43,6 @@ namespace LecturerClaimSystem.Controllers
 			TempData["Success"] = $"Welcome, {user.FullName}";
 			if (!string.IsNullOrWhiteSpace(returnUrl)) return Redirect(returnUrl);
 
-			
 			var roles = await _users.GetRolesAsync(user);
 			if (roles.Contains("HR")) return RedirectToAction("Index", "Hr");
 			if (roles.Contains("Coordinator")) return RedirectToAction("Index", "Coordinator");

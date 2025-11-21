@@ -15,9 +15,19 @@
                 <a class="btn btn-outline-light btn-sm" asp-controller="Lecturer" asp-action="Dashboard">Lecturer</a>
                 <a class="btn btn-outline-light btn-sm" asp-controller="Coordinator" asp-action="Index">Coordinator</a>
                 <a class="btn btn-outline-light btn-sm" asp-controller="Manager" asp-action="Index">Manager</a>
-                <a class="btn btn-outline-light btn-sm" asp-controller="Admin" asp-action="Index">Admin</a>
                 <a class="btn btn-outline-light btn-sm" asp-controller="Hr" asp-action="Index">HR</a>
-                <a class="btn btn-outline-light btn-sm" asp-controller="Auth" asp-action="Login">Login</a>
+
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-light btn-sm">Logout (@User.Identity.Name)</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-light btn-sm" asp-controller="Auth" asp-action="Login">Login</a>
+                }
             </nav>
         </div>
     </header>

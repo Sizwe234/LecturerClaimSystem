@@ -27,8 +27,6 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-
-
 builder.Services.AddSingleton<FileStorageService>();
 builder.Services.AddSingleton<ReportService>();
 

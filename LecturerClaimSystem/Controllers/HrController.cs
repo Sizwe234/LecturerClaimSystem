@@ -15,17 +15,22 @@ namespace LecturerClaimSystem.Controllers
 			_users = users;
 		}
 
+
 		[HttpGet]
 		public IActionResult Index()
 		{
 			return View(_users.Users.ToList());
 		}
 
+		
+
 		[HttpGet]
 		public IActionResult Create()
 		{
 			return View(new AppUser());
 		}
+
+		
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -59,7 +64,63 @@ namespace LecturerClaimSystem.Controllers
 				await _users.AddToRoleAsync(model, role);
 			}
 
-			TempData["Success"] = "User created.";
+			TempData["Success"] = "User created successfully.";
+			return RedirectToAction(nameof(Index));
+		}
+
+		
+
+		[HttpGet]
+		public async Task<IActionResult> Edit(string id)
+		{
+			var user = await _users.FindByIdAsync(id);
+			if (user == null) return NotFound();
+			return View(user);
+		}
+
+		
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Edit(AppUser model, string? password, string role)
+		{
+			var user = await _users.FindByIdAsync(model.Id);
+			if (user == null) return NotFound();
+
+			user.FirstName = model.FirstName;
+			user.LastName = model.LastName;
+			user.Email = model.Email;
+			user.UserName = model.Email;
+			user.HourlyRate = model.HourlyRate;
+
+			var updateResult = await _users.UpdateAsync(user);
+			if (!updateResult.Succeeded)
+			{
+				TempData["Error"] = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+				return View(model);
+			}
+
+
+			if (!string.IsNullOrWhiteSpace(password))
+			{
+				var token = await _users.GeneratePasswordResetTokenAsync(user);
+				var passResult = await _users.ResetPasswordAsync(user, token, password);
+				if (!passResult.Succeeded)
+				{
+					TempData["Error"] = string.Join("; ", passResult.Errors.Select(e => e.Description));
+					return View(model);
+				}
+			}
+
+
+			var currentRoles = await _users.GetRolesAsync(user);
+			await _users.RemoveFromRolesAsync(user, currentRoles);
+			if (!string.IsNullOrWhiteSpace(role))
+			{
+				await _users.AddToRoleAsync(user, role);
+			}
+
+			TempData["Success"] = "User updated successfully.";
 			return RedirectToAction(nameof(Index));
 		}
 	}
