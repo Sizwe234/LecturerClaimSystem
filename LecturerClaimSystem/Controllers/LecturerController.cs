@@ -10,12 +10,12 @@ using System.Linq;
 
 namespace LecturerClaimSystem.Controllers
 {
-	// HR can submit on behalf of someone; Lecturer submits for themselves
+	// Allow HR to submit on behalf of lecturers; lecturers submit for themselves
 	[Authorize(Roles = "Lecturer,HR")]
 	public class LecturerController : Controller
 	{
 		private readonly FileStorageService _files;
-		private readonly AppDbContext _db; // in case you move off ClaimDataStore later
+		private readonly AppDbContext _db;
 		private readonly UserManager<AppUser> _userManager;
 
 		public LecturerController(FileStorageService files, AppDbContext db, UserManager<AppUser> userManager)
@@ -80,18 +80,14 @@ namespace LecturerClaimSystem.Controllers
 			model.LecturerEmail = user.Email!;
 			model.HourlyRate = user.HourlyRate;
 
-			if (model.HoursWorked < 0)
-			{
-				ModelState.AddModelError(nameof(model.HoursWorked), "Hours cannot be negative.");
-			}
-			if (model.HoursWorked > 180)
-			{
-				ModelState.AddModelError(nameof(model.HoursWorked), "Hours cannot exceed 180 in a month.");
-			}
+			if (model.HoursWorked < 1 || model.HoursWorked > 180)
+				ModelState.AddModelError(nameof(model.HoursWorked), "Hours must be between 1 and 180.");
 
-			// Ensure default status
-			if (model.Status == 0)
-				model.Status = ClaimStatus.Pending;
+			if (model.HourlyRate < 1 || model.HourlyRate > 100000)
+				ModelState.AddModelError(nameof(model.HourlyRate), "Rate must be between 1 and 100000.");
+
+			// Default status
+			model.Status = ClaimStatus.Pending;
 
 			if (!ModelState.IsValid)
 			{
@@ -99,7 +95,7 @@ namespace LecturerClaimSystem.Controllers
 				return View(model);
 			}
 
-			// Persist claim (ClaimDataStore handles Id assignment internally)
+			// Save claim to in-memory store
 			ClaimDataStore.AddClaim(model);
 
 			// Optional file upload
@@ -131,7 +127,7 @@ namespace LecturerClaimSystem.Controllers
 				TempData["Success"] = "Claim submitted.";
 			}
 
-			// Redirect: if HR submitted, go to HR Index; otherwise lecturer dashboard
+			// Redirect: HR → HR Index; Lecturer → Lecturer Dashboard
 			var roles = await _userManager.GetRolesAsync(user);
 			if (roles.Contains("HR"))
 				return RedirectToAction("Index", "Hr");
